@@ -3,14 +3,10 @@ import pygame
 import random
 import time
 rows = 0
-alive = True
 difup = 60
 score = 0
 descentrate = 240
 descents = 0
-descenttimer = 240
-tsc = 60
-cooldown_tracker = 0
 enemyreload = 1000
 movecooldown = random.randint(1,10)*10
 movedir = False
@@ -31,7 +27,6 @@ movecooldown = random.randint(1,10)*10
 movedir = False
 altshot = False
 # Enemy AI will have a starting position and a horisontal offset
-enemyshots = []
 player = pygame.Rect(320, 430, 32, 32)
 WIDTH,HEIGHT=640,480
 screen=pygame.display.set_mode((WIDTH,HEIGHT))
@@ -51,7 +46,6 @@ for c in range(0,2):
         allenemies.append(enemies)
         allenemiesbd.append([0, 0, random.randint(1,10)*10, c+1%2 == 0])
     rows += 1
-print(allenemies)
 playershots = []
 enemyshots = []
 player = pygame.Rect(320, 430, 32, 32)
@@ -150,9 +144,9 @@ def enemyshoot():
 def moveplayer():
     global player
     k=pygame.key.get_pressed()
-    if k[pygame.K_RIGHT]:
+    if k[pygame.K_RIGHT] and player.x < 610:
         player.x += 5
-    elif k[pygame.K_LEFT]:
+    elif k[pygame.K_LEFT] and player.x > 5:
         player.x += -5
 def descend():
     global descents
@@ -176,7 +170,7 @@ def addnew():
             allenemiesbd.remove(allenemiesbd[allenemies.index(enemies)])
             allenemies.remove(enemies)
             rows -= 1
-    if rows < 2 or (descents > 3 and rows < 4):
+    if rows < 2 or (descents > 3 and rows < 5):
         enemies = []
         for i in range(0,15):
             enemies.append([pygame.Rect(i*40+20, c*26, 32, 32), random.randint(1,10)*200])
@@ -214,7 +208,7 @@ def pbullets():
             screen.fill("black")
             enemyshots.remove(b)
             screen.blit(death_img, (0, 0))
-            screen.blit(font.render("Your score: " + str(score), False, "red"), (0, 0))
+            screen.blit(font.render("Your score: " + str(score) + "Press down arrow to reset", False, "red"), (0, 0))
             pygame.display.flip()
 
         if b.y > 500:
@@ -228,13 +222,39 @@ async def main():
     global enemies
     global enemyshots
     global playershots
-    global enemyreload, tsc, difup, descentrate
+    global enemyreload, tsc, difup, descentrate,allenemies, player
+    global alive
     while running:
         for e in pygame.event.get():
             if e.type == pygame.QUIT:
                 running = False
             if e.type == pygame.KEYDOWN and e.key == pygame.K_ESCAPE:
                 running = False
+            if e.type == pygame.KEYDOWN and e.key == pygame.K_DOWN and alive == False:
+                global screen
+                global score
+                global playerx
+                global playery
+                global enemies
+                global enemyshots
+                global playershots
+                global enemyreload, tsc, difup, descentrate, rows
+                allenemiesbd = []
+                allenemies = []
+                enemies = []
+                for c in range(0,2):
+                    enemies = []
+                    for i in range(0,15):
+                        enemies.append([pygame.Rect(i*40+20, c*26, 32, 32), random.randint(1,10)*200])
+                        allenemies.append(enemies)
+                        allenemiesbd.append([0, 0, random.randint(1,10)*10, c+1%2 == 0])
+                    rows += 1
+                playershots = []
+                enemyshots = []
+                player = pygame.Rect(320, 430, 32, 32)
+                alive = True
+                score = 0
+                
         if alive:
             enemymove()
             moveplayer()
@@ -272,7 +292,7 @@ async def main():
         else:
             screen.fill("black")
             screen.blit(death_img, (0, 0))
-            screen.blit(font.render("Your score: " + str(score), False, "red"), (0, 0))
+            screen.blit(font.render("Your score: " + str(score) + " Down Arrow to reset", False, "red"), (0, 0))
             pygame.display.flip()
         clock.tick(60)
         await asyncio.sleep(0)
