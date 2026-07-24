@@ -18,6 +18,7 @@ font = pygame.font.SysFont(None, 36)
 clock=pygame.time.Clock()
 alive = True
 score = 0
+shield = 3
 descents = 0
 descenttimer = 240
 tsc = 60
@@ -35,6 +36,7 @@ shot_img = pygame.transform.scale(pygame.image.load("beam.png"), (2, 8)).convert
 rail_img = pygame.transform.scale(pygame.image.load("rail.png"), (32, 32)).convert_alpha()
 ball_img = pygame.transform.scale(pygame.image.load("ball.png"), (8, 8)).convert_alpha()
 death_img = pygame.transform.scale(pygame.image.load("DEATH.png"), (640, 480)).convert_alpha()
+shield_img = pygame.transform.scale(pygame.image.load("Full.png"), (64, 32)).convert_alpha()
 running=True
 allenemiesbd = []
 allenemies = []
@@ -51,13 +53,6 @@ enemyshots = []
 player = pygame.Rect(320, 430, 32, 32)
 WIDTH,HEIGHT=640,480
 screen=pygame.display.set_mode((WIDTH,HEIGHT))
-player_img = pygame.transform.scale(pygame.image.load("jet.png"), (32, 32)).convert_alpha()
-shot_img = pygame.transform.scale(pygame.image.load("beam.png"), (2, 8)).convert_alpha()
-rail_img = pygame.transform.scale(pygame.image.load("rail.png"), (32, 32)).convert_alpha()
-ball_img = pygame.transform.scale(pygame.image.load("ball.png"), (8, 8)).convert_alpha()
-death_img = pygame.transform.scale(pygame.image.load("DEATH.png"), (640, 480)).convert_alpha()
-fleetpos = 0
-fleettarg = 0
 running=True
 enemies = []
 playershots = []
@@ -201,15 +196,21 @@ def pbullets():
             except ValueError: pass
     for b in enemyshots:
         global alive
-        global running
+        global running, shield, shield_img
         b.y = b.y+5
         if b.colliderect(player):
-            alive = False
-            screen.fill("black")
             enemyshots.remove(b)
-            screen.blit(death_img, (0, 0))
-            screen.blit(font.render("Your score: " + str(score) + "Press down arrow to reset", False, "red"), (0, 0))
-            pygame.display.flip()
+            shield -= 1
+            if shield == 2:
+                shield_img = pygame.transform.scale(pygame.image.load("Half.png"), (64, 32)).convert_alpha()
+            elif shield == 1:
+                shield_img = pygame.transform.scale(pygame.image.load("Empty.png"), (64, 32)).convert_alpha()
+            elif shield == 0:
+                alive = False
+                screen.fill("black")
+                screen.blit(death_img, (0, 0))
+                screen.blit(font.render("Your score: " + str(score) + "Press down arrow to reset", False, "red"), (0, 0))
+                pygame.display.flip()
 
         if b.y > 500:
             enemyshots.remove(b)
@@ -222,7 +223,7 @@ async def main():
     global enemies
     global enemyshots
     global playershots
-    global enemyreload, tsc, difup, descentrate,allenemies, player
+    global enemyreload, tsc, difup, descentrate,allenemies, player,allenemiesbd
     global alive
     while running:
         for e in pygame.event.get():
@@ -238,7 +239,7 @@ async def main():
                 global enemies
                 global enemyshots
                 global playershots
-                global enemyreload, tsc, difup, descentrate, rows
+                global enemyreload, tsc, difup, descentrate, rows, shield, shield_img
                 allenemiesbd = []
                 allenemies = []
                 enemies = []
@@ -251,8 +252,11 @@ async def main():
                     rows += 1
                 playershots = []
                 enemyshots = []
+                descentrate, difup, enemyreload = 0, 60, 1000
                 player = pygame.Rect(320, 430, 32, 32)
                 alive = True
+                shield = 3
+                shield_img = pygame.transform.scale(pygame.image.load("Full.png"), (64, 32)).convert_alpha()
                 score = 0
                 
         if alive:
@@ -272,6 +276,8 @@ async def main():
                 for e in row:
                     screen.blit(rail_img, (e[0].x, e[0].y))
             screen.blit(player_img, (player.x, player.y))
+            screen.blit(shield_img, (500, 420))
+
             screen.blit(font.render("Score: " + str(score), False, "red"), (0, 0))
 
             pygame.display.flip()
